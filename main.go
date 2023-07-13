@@ -4,10 +4,14 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
+	"io"
+	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
+	"github.com/poshangqiucao/go-file/utils"
 )
 
 //go:embed static/* templates/*
@@ -33,6 +37,10 @@ func main() {
 
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "upload.html", nil)
+	})
+
+	r.GET("/search", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "search.html", nil)
 	})
 
 	// 定义文件上传路由
@@ -65,7 +73,52 @@ func main() {
 			return
 		}
 
+		// 索引文件信息到gofound
+		err = utils.IndexFileInfo(targetPath, file.Filename, "test")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
 		c.HTML(http.StatusOK, "success.html", nil)
+	})
+
+	r.GET("/s", func(c *gin.Context) {
+		q := c.Query("q")
+		result, err := utils.QueryIndex(q, "test")
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		c.JSON(http.StatusOK, result)
+
+	})
+
+	r.GET("/download", func(c *gin.Context) {
+		filePath := c.Query("filepath") // 获取文件名参数
+
+		// 打开文件
+		file, err := os.Open(filePath)
+		if err != nil {
+			log.Println("打开文件出错:", err)
+			c.String(http.StatusInternalServerError, "文件打开失败")
+			return
+		}
+		defer file.Close()
+
+		filename := filepath.Base(filePath)
+		// 设置响应头
+		c.Header("Content-Disposition", "attachment; filename="+filename)
+		c.Header("Content-Type", "application/octet-stream")
+		c.Header("Content-Transfer-Encoding", "binary")
+		c.Header("Content-Length", "")
+
+		// 将文件内容复制到响应中
+		_, err = io.Copy(c.Writer, file)
+		if err != nil {
+			log.Println("写入响应出错:", err)
+			return
+		}
 	})
 
 	// 启动服务器

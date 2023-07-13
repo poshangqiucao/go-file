@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>文件搜索</title>
+    <link rel="shortcut icon" href="{{ static "favicon.ico" }}">
+    <script src="{{ static "jquery/jquery-3.7.0.min.js" }}"></script>
+    <!-- 引入 Bootstrap 样式 -->
+    <link rel="stylesheet" href="{{ static "bootstrap/bootstrap.min.css" }}">
+</head>
+<body>
+    <div class="container">
+        <h1>文件搜索</h1>
+        <form id="searchForm">
+            <div class="mb-3">
+                <label for="query" class="form-label">搜索词：</label>
+                <input type="text" class="form-control" id="query" name="query" required>
+            </div>
+            <button type="submit" class="btn btn-primary">搜索</button>
+            <span><a href="/">文件上传</a></span>
+        </form>
+
+        <div id="searchResults"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#searchForm').submit(function(e) {
+                e.preventDefault(); // 阻止表单默认提交行为
+
+                var query = $('#query').val(); // 获取搜索词
+
+                // 发送 AJAX 请求
+                $.ajax({
+                    type: 'GET',
+                    url: '/s',
+                    data: { q: query },
+                    success: function(data) {
+                        displayResults(data); // 展示搜索结果
+                    },
+                    error: function() {
+                        alert('请求出错，请稍后再试。');
+                    }
+                });
+            });
+
+            // 展示搜索结果
+            function displayResults(data) {
+                var $resultsDiv = $('#searchResults');
+                $resultsDiv.empty();
+
+                if (data.length === 0) {
+                    $resultsDiv.html('<p>未找到匹配的结果。</p>');
+                } else {
+                    var html = '<h2>搜索结果</h2>';
+                    html += '<h3>搜索词：' + $('#query').val() + '</h3>';
+                    //html += '<table class="table"><thead><tr><th>ID</th><th>文本</th><th>文件路径</th><th>原始文本</th><th>得分</th><th>关键词</th></tr></thead><tbody>';
+                    html += '<table class="table"><thead><tr><th>ID</th><th>文本</th><th>文件路径</th><th>得分</th><th>关键词</th></tr></thead><tbody>';
+
+                    $.each(data, function(index, result) {
+                        html += '<tr>';
+                        html += '<td>' + result.id + '</td>';
+                        html += '<td>' + result.text + '</td>';
+                        html += '<td>' + result.document.filepath + '</td>';
+                        //html += '<td>' + result.originalText + '</td>';
+                        html += '<td>' + result.score + '</td>';
+                        html += '<td>' + result.keys.join(', ') + '</td>';
+                        html += '<td>';
+
+                            if (result.document.filepath) {
+                                html += '<a href="/download?filepath=' + result.document.filepath + '">下载</a>';
+                            }
+    
+                        html += '</td>';
+                        html += '</tr>';
+                    });
+
+                    html += '</tbody></table>';
+
+                    $resultsDiv.html(html);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
