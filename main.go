@@ -54,6 +54,8 @@ func main() {
 
 		// 获取目标路径参数
 		targetPath := c.PostForm("targetPath")
+		fileLabel := c.PostForm("fileLabel")
+		log.Println(fileLabel)
 		if targetPath == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "目标路径不能为空"})
 			return
@@ -74,7 +76,7 @@ func main() {
 		}
 
 		// 索引文件信息到gofound
-		err = utils.IndexFileInfo(targetPath, file.Filename, "test")
+		err = utils.IndexFileInfo(targetPath, file.Filename, fileLabel, "test")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

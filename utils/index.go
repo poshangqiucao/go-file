@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func IndexFileInfo(targetPath, filename, database string) error {
+func IndexFileInfo(targetPath, filename, filelabel, database string) error {
 	// 将文件信息索引到gofound中
 	url := "http://localhost:8080/api/index?database=" + database
 
@@ -20,7 +20,7 @@ func IndexFileInfo(targetPath, filename, database string) error {
 	}
 	jsonData := map[string]interface{}{
 		"id":       time.Now().Unix(),
-		"text":     filename,
+		"text":     filename + " " + filelabel,
 		"document": docData,
 	}
 
