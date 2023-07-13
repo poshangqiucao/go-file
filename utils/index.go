@@ -75,7 +75,7 @@ func QueryIndex(query string, database string) ([]DocumentData, error) {
 	requestBody := map[string]interface{}{
 		"query": query,
 		"page":  1,
-		"limit": 10,
+		"limit": 100,
 		"order": "desc",
 		"highlight": map[string]string{
 			"preTag":  "<span style='color:red'>",
